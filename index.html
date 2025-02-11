@@ -3,10 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My GitHub Pages Site</title>
+    <title>Premium Link Generator</title>
 </head>
 <body>
-    <h1>Welcome to My GitHub Pages Site</h1>
-    <p>This is a simple website hosted on GitHub Pages.</p>
+    <h1>Deepbrid Premium Link Generator</h1>
+    
+    <h2>Generate Premium Link</h2>
+    <form id="generateForm">
+        <label for="link">Enter Link:</label>
+        <input type="text" id="link" name="link" required>
+        <button type="submit">Generate</button>
+    </form>
+    <p id="result"></p>
+    
+    <h2>Update Cookies</h2>
+    <form id="cookieForm">
+        <label for="cf_clearance">cf_clearance:</label>
+        <input type="text" id="cf_clearance" name="cf_clearance">
+        
+        <label for="crisp_client">crisp-client/session:</label>
+        <input type="text" id="crisp_client" name="crisp_client">
+        
+        <label for="amember_nr">amember_nr:</label>
+        <input type="text" id="amember_nr" name="amember_nr">
+        
+        <button type="submit">Update Cookies</button>
+    </form>
+    <p id="cookieMessage"></p>
+    
+    <script>
+        document.getElementById('generateForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const link = document.getElementById('link').value;
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ link })
+            });
+            const result = await response.json();
+            document.getElementById('result').innerText = result.premium_link || result.error;
+        });
+
+        document.getElementById('cookieForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const cookies = {
+                cf_clearance: document.getElementById('cf_clearance').value,
+                crisp_client: document.getElementById('crisp_client').value,
+                amember_nr: document.getElementById('amember_nr').value
+            };
+            const response = await fetch('/update_cookies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cookies)
+            });
+            const result = await response.json();
+            document.getElementById('cookieMessage').innerText = result.message;
+        });
+    </script>
 </body>
 </html>

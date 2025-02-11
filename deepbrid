@@ -1,0 +1,71 @@
+from flask import Flask, request, jsonify, render_template
+import requests
+
+app = Flask(__name__)
+
+# Define initial cookies
+cookies = {
+    "cf_clearance": "",
+    "crisp-client/session/ffca7959-dfd6-4915-90e2-b2feb57ae28e": "",
+    "amember_nr": "",
+}
+
+# Update session cookies
+session = requests.Session()
+session.cookies.update(cookies)
+
+# Define headers
+headers = {
+    "Host": "www.deepbrid.com",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0",
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    "Referer": "https://www.deepbrid.com/service",
+    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "X-Requested-With": "XMLHttpRequest",
+    "Origin": "https://www.deepbrid.com",
+    "Connection": "keep-alive",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin"
+}
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/generate', methods=['POST'])
+def generate_premium_link():
+    data = request.json
+    user_input = data.get('link')
+    
+    if not user_input:
+        return jsonify({"error": "Please enter a valid URL."}), 400
+    
+    payload = {
+        "link": user_input,
+        "pass": "",
+        "boxlinklist": "0"
+    }
+
+    response = session.post('https://www.deepbrid.com/backend-dl/index.php?page=api&action=generateLink', headers=headers, data=payload)
+    
+    if response.status_code == 200:
+        result = response.json()
+        return jsonify({"premium_link": result.get('link', 'No premium link available')})
+    else:
+        return jsonify({"error": "Failed to generate the premium link."}), 500
+
+@app.route('/update_cookies', methods=['POST'])
+def update_cookie():
+    new_cookies = request.json
+    for key in cookies.keys():
+        if key in new_cookies:
+            cookies[key] = new_cookies[key]
+    
+    session.cookies.update(cookies)
+    return jsonify({"message": "Cookies updated successfully!"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
